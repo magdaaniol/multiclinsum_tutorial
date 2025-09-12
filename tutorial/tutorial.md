@@ -1,15 +1,16 @@
+# Beyond Basic Metrics: Engineering a Human-Aligned LLM Evaluation Workflow with Prodigy and DSPy
 Building reliable LLM systems is less about finding a "magic prompt" and more about establishing a rigorous, iterative development cycle. The DSPy framework is designed for precisely this, treating LLM pipelines not as brittle prompt chains, but as programs to be compiled and automatically optimized. It enables a methodical, iterative development of prompts, metrics and models, which is essential for structured experimentation. However, the quality of any automated optimization is fundamentally limited by the quality of the metric guiding it. This is where the loop needs human input.
 
-My goal was to leverage Prodigy's powerful UI to create a tight, human-in-the-loop workflow, capturing nuanced human feedback on the metric and the baseline DSPy program performance and propagating it directly to the DSPy optimizer. To test this integrated approach, I chose the data from MultiClinSum shared task published by Barcelona SuperComputing Center.
+My goal was to leverage Prodigy's powerful UI to create a tight, human-in-the-loop workflow, capturing nuanced human feedback on the metric and the baseline DSPy program performance and propagating it directly to the DSPy optimizer. To test this integrated approach, I chose the data from [MultiClinSum(https://temu.bsc.es/multiclinsum/) shared task published by [Barcelona Supercomputing Center](https://www.bsc.es/).
 
-The MultiClinSum shared task provided a very relevant use case. Summarizing clinical notes is a high-stakes task where "quality" is incredibly context-specific. A good summary for a clinician's quick review needs different information than one for a patient's understanding or for an automated billing system. The quality is not absolute; it depends entirely on the summary's intended use. This ambiguity makes it a poor fit for generic, off-the-shelf metrics such as ROUGE or BERTScore and an ideal candidate for a workflow where human judgment is used to engineer a custom, task-aligned evaluation metric.
+The MultiClinSum shared task provided a very relevant use case. Summarizing clinical notes is a high-stakes task where "quality" is context-specific. A good summary for a clinician's quick review needs different information than one for a patient's understanding or for an automated billing system. The quality is not absolute; it depends entirely on the summary's intended use. This ambiguity makes it a poor fit for generic, off-the-shelf metrics such as ROUGE or BERTScore and an ideal candidate for a workflow where human judgment is used to engineer a custom, task-aligned evaluation metric.
 
-This post documents tacling MultiClinSum task using this integrated Prodigy-DSPy workflow. I'll move beyond generic metrics to show how you can use Prodigy and DSPy to systematically engineer a custom, human-aligned metric and use it to both guide and validate a DSPy program, resulting in an LLM system that is not just coherent, but truly useful for its intended purpose.
+This post documents tackling MultiClinSum task using this integrated Prodigy-DSPy workflow. I'll move beyond generic metrics to show how you can use Prodigy and DSPy to systematically engineer a custom, human-aligned metric and use it to both guide and validate a DSPy program, resulting in an LLM system that is not just coherent, but truly useful for its intended purpose.
 
 
 ## Step 1: Collecting Granular Human Feedback with Prodigy
 
-The first step was to define a baseline **DSPy program** for summarization and an initial **metric** to guide it. For the metric, I chose **BERTScore**. This was motivated by the MultiClinSUM shared task itself, where organizers use BERTScore and ROUGE (as well a couple of other, undisclosed metrics) for evaluation. For this experiment I discarded ROUGE due to its reliance on exact lexical overlap, which makes it notoriously poor at understanding synonyms and paraphrasing. BERTScore, which leverages contextual embeddings to measure semantic similarity, is a much stronger and more modern baseline (Zhang et al., 2019).
+The first step was to define a baseline **DSPy program** for summarization and an initial **metric** to guide it. For the metric, I chose **BERTScore**. This was motivated by the MultiClinSUM shared task itself, where organizers use BERTScore and ROUGE (as well a couple of other, undisclosed metrics) for evaluation. For this experiment I discarded ROUGE due to its reliance on exact lexical overlap, which makes it notoriously poor at understanding synonyms and paraphrasing. BERTScore, which leverages contextual embeddings to measure semantic similarity, is a much stronger and more modern baseline (TODO add citation).
 
 <details>
 <summary>Show Baseline DSPy Summarization Program</summary>
@@ -29,15 +30,15 @@ class SummarizationProgram(dspy.Module):
     def forward(self, document: str):
         return self.generate_summary(document=document)
 ```
-</details\>
+</details>
 
 For the development set I sampled 30 examples from the MultiClinSum English training set (downloaded from [here](https://zenodo.org/records/15546018))
 
 Running the baseline program against the development set yielded a realitvely high BERTScore of **87.19** with GPT-4o-mini. On the surface, this looked like a great start.
 
 To understand the *actual* quality of the summaries, I performed a qualitative review. I decided to evaluate the summaries based on the following aspects:
-* **Factual Accuracy:** Is the information correct?
-* **Clinical Completeness:** Does it include all critical information?
+* **Factual accuracy:** Is the information correct?
+* **Clinical completeness:** Does it include all critical information?
 * **Conciseness:** Is it succinct and to the point?
 
 For this I created a custom Prodigy UI, that would allow me to compare the model generated summaries with the human made summaries from MultiClinSum dataset and the source document. To prevent clogging the UI with multiple sets of `choice` blocks, I used Prodigy's `pages` UI that allows for convenient switching between the 3 evaluation aspects: 
@@ -104,13 +105,13 @@ summaries could significantly improve its performance.
 │ provide a more comprehensive evaluation of the summary's quality.                │
 ╰──────────────────────────────────────────────────────────────────────────────────╯
 ```
-This LLM-generated advice gave us a clear, data-driven path forward. It's important to critically evaluate such suggestions, and the proposed enhanced_summary_metric certainly has serious limitations. The hard-coded key_clinical_terms list is generic and not context-specific to each clinical note, and the simple keyword search is too brittle to handle synonyms or paraphrasing.
+This LLM-generated advice gave us a clear, data-driven path forward. It's important to critically evaluate such suggestions, and the proposed `enhanced_summary_metric` certainly has serious limitations. The hard-coded `key_clinical_terms` list is generic and not context-specific to each clinical note, and the simple keyword search is too brittle to handle synonyms or paraphrasing.
 
 Despite these implementation flaws, the suggestion was invaluable because it correctly identified the core conceptual problem: our evaluation had to explicitly account for clinical completeness. This insight, rather than the literal code provided, guided the steps.
 
-### Step 3: Quantifying Human Judgment
+## Step 3: Quantifying Human Judgment
 
-Following this advice, my first step was to implement a new "composite metric" to incorporate some notion of completeness. Rather than a key word list, I used a `scispacy` NER component. I also wrote the function to quantify my human feedback into a single score, which would serve as the reference for the correlation analysis.
+Following this advice, my next step was to implement a new "composite metric" to incorporate some notion of completeness. Rather than a key word list, I used a `scispacy` NER component. I also wrote the function to quantify my human feedback into a single score, which would serve as the reference for the correlation analysis.
 
 <details>
 <summary>Show Human Score Computation</summary>
@@ -192,11 +193,11 @@ With my human judgments now quantified into a single score, I could run a correl
 
 As the plots reveal, neither metric was effective:
 
-    1. Baseline BERTScore (Left Plot): This metric showed almost no correlation with human judgment (Spearman's ρ of 0.14), proving it was blind to critical failures.
+1. Baseline BERTScore (Left Plot): This metric showed almost no correlation with human judgment (Spearman's ρ of 0.14), proving it was blind to critical failures.
 
-    2. NER Composite Metric (Right Plot): Our more advanced attempt was still unsuccessful, showing an even lower correlation (Spearman's ρ of ~0.12). While NER-based entity overlap is a good idea, it can be too strict. It often fails to match entities that are semantically similar but textually different (e.g., "heart failure" vs. "cardiac arrest"), ultimately adding noise instead of a clear signal for completeness.
+2. NER Composite Metric (Right Plot): Our more advanced attempt was still unsuccessful, showing an even lower correlation (Spearman's ρ of ~0.12). While NER-based entity overlap is a good idea, it can be too strict. It often fails to match entities that are semantically similar but textually different (e.g., "heart failure" vs. "cardiac arrest"), ultimately adding noise instead of a clear signal for completeness.
 
-This experiment was a crucial step. I now had definitive proof that a simple, off-the-shelf metric wasn't good enough, and even a more domain-specific composite metric using brittle heuristics like NER was insufficient. This failure motivated the need for a truly semantic approach.
+That said, I now had a definitive proof that a simple, off-the-shelf metric wasn't good enough, and even a more domain-specific composite metric using brittle heuristics like NER was insufficient. This failure motivated the need iterate on the metric.
 
 
 ## Step 5: Engineering a Superior Metric with LLM-as-a-Judge
@@ -255,7 +256,7 @@ def make_holistic_llm_metric():
     
     return holistic_llm_metric
 ```
-<details>
+</details>
 
 I then re-ran our correlation analysis, comparing this new "LLM-as-a-judge" metric against the baseline BERTScore:
 ![Description](images/bert_vs_llm.png)
@@ -273,20 +274,18 @@ You are absolutely right. Thank you for providing the crucial piece of the puzzl
 
 My previous explanation was conceptually correct but missed this important implementation detail. Let's revise that section to be more technically accurate and give a clearer picture of how the plugin works under the hood.
 
------
-
 ## Step 6: Optimizing The Program with the Improved Metric and Human Feedback
 
-With the LLM-as-a-judge metric and feedback-rich Prodigy dataset ready, I could now run a DSPy optimizer (like MIPROv2) to compile the program, automatically tuning its prompts to maximize the human-aligned metric.
+With the LLM-as-a-judge metric and feedback-rich Prodigy dataset, I could now run a DSPy optimizer (like MIPROv2) to compile the program, automatically tuning its prompts to maximize the human-aligned metric.
 
 It's worth pointing out that the optimization process had two significant features:
 
-1.  **A Better Target:** I was now optimizing against the superior **LLM-as-a-judge metric**, not the flawed baseline. This should ensure that the optimizer is aiming for "true" quality.
-2.  **Richer Guidance:** I was passing the granular, example-level **human feedback** from Prodigy directly into the optimizer's trace. FYI, this also is a powerful, built-in feature of the Prodigy-DSPy plugin.
+1. I was now optimizing against the superior **LLM-as-a-judge metric**, not the flawed baseline. This should ensure that the optimizer is aiming for "true" quality.
+2. I was passing the granular, example-level **human feedback** from Prodigy directly into the optimizer's trace. FYI, this also is a powerful, built-in feature of the Prodigy-DSPy plugin.
 
-This second point is crucial. DSPy optimizers, in particular, `MIPRO` can use this qualitative feedback to understand *why* a given prediction was good or bad, leading to more grounded prompt suggestions.
+This second point is crucial. DSPy optimizers, in particular, `MIPRO` can use this qualitative feedback to understand *why* a given prediction was good or bad, leading to more grounded prompt suggestions. The text input box with free form comments per evaluation aspect were particularly useful for this.
 
-The plugin accomplishes this with a clever **wrapper function**, `create_feedback_metric`. Instead of feeding our LLM-as-a-judge metric directly to the optimizer, the plugin wraps it and feeds the post-processed feedback to the `dspy.Prediction`
+The plugin accomplishes this with a wrapper function, `create_feedback_metric`. Instead of feeding our LLM-as-a-judge metric directly to the optimizer, the plugin wraps it and feeds the post-processed feedback to the `dspy.Prediction`:
 
 ```python
 def create_feedback_metric(original_metric: Callable) -> Callable:
@@ -306,30 +305,27 @@ def create_feedback_metric(original_metric: Callable) -> Callable:
 
     return metric_with_feedback
 ```
-For each example in our development set, it first calls our LLM judge to get a score, then it finds the raw human feedback we collected in Prodigy (which was attached to the `dspy.Example`), and finally, it bundles them together into a `dspy.Prediction` object.
+For each example in the development set, it first calls the LLM judge to get a score, then it finds the raw human feedback collected in Prodigy (which was attached to the `dspy.Example`), and finally, it bundles them together into a `dspy.Prediction` object.
 
 This actually is what makes the workflow so powerful. The nuanced, qualitative judgments, captured in the Prodigy UI, are now directly informing the automated optimization process, creating a tight, effective human-in-the-loop cycle.
 
 ## Final Evaluation: Did It All Work?
 
-The ultimate test was to evaluate the performance of our `baseline program` and our `optimized program` on a held-out test set of 100 examples. I evaluated both programs using both metrics: the problematic BERTScore and our newly engineered Holistic LLM Metric.
-
-Here are the definitive results:
+The ultimate test was to evaluate the performance of the `baseline program` and the `optimized program` on a held-out test set of 100 examples. I evaluated both programs using both metrics: the problematic BERTScore and the LLM-as-a-judge metric.
 
 | Program Version             | Measured by Baseline Metric (BERTScore) | Measured by **Our LLM Judge Metric** |
 | :-------------------------- | :-------------------------------------- | :----------------------------------- |
 | **Baseline Program** | 87.19                                   | 53.90                                |
 | **Optimized Program** | 87.27 **(+0.08)** | 68.07 **(+14.17)** |
 
-When measured by a standard, off-the-shelf metric like BERTScore, the efforts in optimizing the DSPy program appeared to be a failure, showing only a negligible +0.08 point improvement.
 
-However, when measured with the human-aligned LLM judge metric, the story is completely different. The new metric revealed a substantial ~26% improvement in quality.
+The human-aligned LLM judge metric revealed a substantial ~26% improvement in quality. This improvement was not captured by BERTScore at showing only a negligible +0.08 point improvement.
 
-This demonstrates the core lesson of the Prodigy-DSPy workflow: improving LLM-based systems requires a dual effort. It's not only about program optimization but also about developing aligned metrics necessary to see and validate  the progress. This, in turn, requires looking at the outputs with which Prodigy can help a lot.
+It's clearly not only about the program optimization but also about understanding your notion of quality and developing aligned metrics. Otherwise, it's next to impossible to observe and measure the progress.
 
 ## Conclusion: The Power of Human-Aligned Evaluation
 
 
 1.  **Standard metrics are often insufficient** for complex, nuanced tasks, failing to capture what truly matters to human users.
-2.  **Granular human feedback is indispensable** for understanding model deficiencies and guiding metric development.
-3.  **LLM-as-a-Judge metrics, carefully engineered with human insight, can become powerful, human-aligned evaluators.** They can understand the subtle interplay of quality attributes far better than simple rule-based or statistical metrics.
+2.  **Granular human feedback is indispensable** for understanding model deficiencies and guiding metric development. A well designed UI for capturing this feedback is an indispensible tool for this.
+3.  **LLM-as-a-Judge metrics, carefully engineered with human insight, can become powerful, human-aligned evaluators.** They can potentially understand the subtle interplay of quality attributes far better than simple rule-based or statistical metrics.
