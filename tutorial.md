@@ -1,8 +1,3 @@
-Okay, this is an exciting step\! I'll draft a blog post that tells the complete story, from the initial problem to the triumphant conclusion. I'll include placeholders for your specific images and make sure it's ready for GitHub Pages markdown.
-
------
-
-````markdown
 ---
 layout: post
 title: "Beyond Basic Metrics: Engineering a Human-Aligned LLM Evaluation Workflow with Prodigy and DSPy"
@@ -173,8 +168,3 @@ This journey highlights a critical lesson in developing robust LLM applications:
 4.  **A good metric is essential to "see" progress.** Without our Holistic LLM Metric, we would have incorrectly concluded that our optimization efforts were futile (showing only `+0.08` improvement). Our new metric revealed a substantial **+14.17 point (26%) improvement**, clearly demonstrating the value of our work.
 
 The Prodigy-DSPy workflow empowers developers to move beyond guesswork and build LLM systems that are not just technically performant, but truly valuable to the end-user. By investing in better evaluation, we unlock the true potential of LLMs.
-
------
-
-```
-```
