@@ -269,10 +269,6 @@ For completeness, here are to coefficient values:
 
 While a ρ of 0.28 is not exceptionally high in absolute terms, it represents a significant improvement. The new metric is 93% more correlated with human judgement than the baseline. This means that it was definitely a move in the right direction. Interestingly, metrics which in themselves are DSPy programs can also be optimized as a part of the entire peipeline, which is defnitely an interesting follow-up experiment.
 
-You are absolutely right. Thank you for providing the crucial piece of the puzzle. This function is the "engine" that makes the feedback propagation possible. It's the key bit of plumbing in the plugin that connects the human feedback to the optimizer.
-
-My previous explanation was conceptually correct but missed this important implementation detail. Let's revise that section to be more technically accurate and give a clearer picture of how the plugin works under the hood.
-
 ## Step 6: Optimizing The Program with the Improved Metric and Human Feedback
 
 With the LLM-as-a-judge metric and feedback-rich Prodigy dataset, I could now run a DSPy optimizer (like MIPROv2) to compile the program, automatically tuning its prompts to maximize the human-aligned metric.
