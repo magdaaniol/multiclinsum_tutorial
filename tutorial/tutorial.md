@@ -107,7 +107,7 @@ summaries could significantly improve its performance.
 ```
 This LLM-generated advice gave us a clear, data-driven path forward. It's important to critically evaluate such suggestions, and the proposed `enhanced_summary_metric` certainly has serious limitations. The hard-coded `key_clinical_terms` list is generic and not context-specific to each clinical note, and the simple keyword search is too brittle to handle synonyms or paraphrasing.
 
-Despite these implementation flaws, the suggestion was invaluable because it correctly identified the core conceptual problem: our evaluation had to explicitly account for clinical completeness. This insight, rather than the literal code provided, guided the steps.
+Despite these implementation flaws, the suggestion was valuable because it correctly identified the core conceptual problem: our evaluation had to explicitly account for clinical completeness. This insight, rather than the literal code provided, guided the steps.
 
 ## Step 3: Quantifying Human Judgment
 
