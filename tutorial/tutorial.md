@@ -202,9 +202,11 @@ That said, I now had a definitive proof that a simple, off-the-shelf metric wasn
 
 ## Step 5: Engineering a Superior Metric with LLM-as-a-Judge
 
-The failure analysis above showed that a simplistic, rule-based approach for "completeness" wasn't enough. I wanted to expermint with "LLM-as-a-judge" pattern as this hopefully could result in better sensitivity to my chosen aspects. 
-Integrating LLMs to metric is extremely easy with DSPy! What's needed is essentially a dedicated DSPy Program, in this case, with a DSPy signature that asks an LLM to perform a holistic evaluation, considering all our criteria (accuracy, completeness, conciseness) and their relative importance.
+The failure analysis above showed that a simplistic, rule-based approach for "completeness" wasn't enough. I wanted to expermint with "LLM-as-a-judge" pattern as this hopefully could result in better sensitivity to my chosen aspects.
 
+`Matt: Why should "LLM-as-a-judge" work, in theory? If the LLM is able to tell good outputs from bad ones, why can't it just generate a better output to start with? The key point is that for most tasks, evaluation is a one-way function: it's a lot easier to say what score an output should get than it would be to say what output would get some score. This makes a generate-and-evaluate loop fundamentally more powerful than a single step of generation.`
+
+Integrating LLM-as-a-judge into a metric is extremely easy with DSPy. What's needed is essentially a dedicated DSPy Program, in this case, with a DSPy signature that asks an LLM to perform a holistic evaluation, considering all our criteria (accuracy, completeness, conciseness) and their relative importance.
 
 <details>
 <summary>Show LLM-as-a-judge metric</summary>
