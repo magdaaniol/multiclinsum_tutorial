@@ -44,12 +44,12 @@ To understand the *actual* quality of the summaries, I performed a qualitative r
 For this I created a custom Prodigy UI, that would allow me to compare the model generated summaries with the human made summaries from MultiClinSum dataset and the source document. To prevent clogging the UI with multiple sets of `choice` blocks, I used Prodigy's `pages` UI that allows for convenient switching between the 3 evaluation aspects: 
 ![Description](images/evaluation_ui.png)
 
-It's important to note that these criteria are subjective and tied to my specific goal for the summaries. A practicing clinician prioritizing differential diagnoses might choose different aspects, while a billing specialist would focus on another set entirely. This context-dependency is precisely why off-the-shelf metrics often fail.
+It's important to note that these criteria are subjective and tied to my specific goal for the summaries. A practicing clinician prioritizing differential diagnoses might choose different aspects, while a billing specialist would focus on another set entirely. This context-dependency is precisely why off-the-shelf metrics often fail. `Matt: There's no such thing as a "good summary" in an abstract, ideal sense. The question is always good _for what_. General metrics can distinguish totally irrelevant outputs from okay ones, but to get from "okay" to "good" you need something application-specific.`
 
 
 ## Step 2: Synthesizing Human Feedback with an LLM Assistant
 
-After analysing 30 summaries I had an idea of what aspects are missing from the baseline DSPy Program but I now needed to translate that fragmentary, qualitative feedback into concrete improvements to the metric function to make sure the the DSPy optimizer "climbs the right hill". A powerful feature of the upcoming **Prodigy-DSPy plugin** is the ability to use an LLM to analyze this feedback and provide concrete advice for improving your metric.
+After analysing 30 summaries I had an idea of what aspects were missing from the baseline DSPy Program but I now needed to translate that fragmentary, qualitative feedback into concrete improvements to the metric function to make sure the DSPy optimizer "climbs the right hill". A powerful feature of the upcoming **Prodigy-DSPy plugin** is the ability to use an LLM to analyze this feedback and provide concrete advice for improving your metric.
 
 I fed my collected feedback and the baseline metric (BERTScore) into this analysis tool. The LLM provided a concise summary of the failure patterns and a direct suggestion for a better metric.
 
@@ -269,7 +269,6 @@ For completeness, here are to coefficient values:
 
 While a ρ of 0.28 is not exceptionally high in absolute terms, it represents a significant improvement. The new metric is 93% more correlated with human judgement than the baseline. This means that it was definitely a move in the right direction. Interestingly, metrics which in themselves are DSPy programs can also be optimized as a part of the entire peipeline, which is defnitely an interesting follow-up experiment.
 
-
 You are absolutely right. Thank you for providing the crucial piece of the puzzle. This function is the "engine" that makes the feedback propagation possible. It's the key bit of plumbing in the plugin that connects the human feedback to the optimizer.
 
 My previous explanation was conceptually correct but missed this important implementation detail. Let's revise that section to be more technically accurate and give a clearer picture of how the plugin works under the hood.
@@ -321,7 +320,7 @@ The ultimate test was to evaluate the performance of the `baseline program` and 
 
 The human-aligned LLM judge metric revealed a substantial ~26% improvement in quality. This improvement was not captured by BERTScore at showing only a negligible +0.08 point improvement.
 
-It's clearly not only about the program optimization but also about understanding your notion of quality and developing aligned metrics. Otherwise, it's next to impossible to observe and measure the progress.
+It's clearly not only about the program optimization but also about understanding your notion of quality and developing aligned metrics. Otherwise, it's next to impossible to observe and measure the progress. `Matt: Summarization evaluation is a function with three inputs: the original text, the summary, and _you_: what are you looking to find out from the text? A general metric like BERTScore can help you discard totally irrelevant outputs, but at some point you need to use something task-specific to keep improving.`
 
 ## Conclusion: The Power of Human-Aligned Evaluation
 
