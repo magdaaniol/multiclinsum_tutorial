@@ -111,7 +111,7 @@ Despite these implementation flaws, the suggestion was valuable because it corre
 
 ## Step 3: Quantifying human judgment
 
-Following this advice, my next step was to implement a new "composite metric" to incorporate some notion of completeness. Rather than a key word list, I used a `scispacy` NER component. I also wrote the function to quantify my human feedback into a single score, which would serve as the reference for the correlation analysis.
+Following this advice, my next step was to implement a new "composite metric" to incorporate some notion of completeness. Rather than a key word list, I used a `scispacy` NER component. I also wrote the function to quantify my human feedback into a single score, which would serve as the reference for the correlation analysis. It’s worth noting that both the human score and the composite metric are intentionally simplistic. I did not spend time optimizing them — they were designed purely to demonstrate the workflow: translating human feedback into a quantifiable metric and using it to guide model evaluation. More sophisticated metrics could surely improve the correlation, but even these basic versions illustrate the concept effectively.
 
 <details>
 <summary>Show human score computation</summary>
