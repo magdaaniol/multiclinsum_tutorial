@@ -34,7 +34,7 @@ class SummarizationProgram(dspy.Module):
 
 For the development set I sampled 30 examples from the MultiClinSUM English train set (downloaded from [here](https://zenodo.org/records/15546018))
 
-Running the baseline program against the development set yielded a realitvely high BERTScore of **87.19** with GPT-4o-mini. On the surface, this looked like a great start.
+Running the baseline program against the development set yielded a relatively high BERTScore of **87.19** with GPT-4o-mini. On the surface, this looked like a great start.
 
 To understand the *actual* quality of the summaries, I performed a qualitative review. I decided to evaluate the summaries based on the following aspects:
 * **Factual accuracy:** Is the information correct?
@@ -202,7 +202,7 @@ That said, I now had a definitive proof that a simple, off-the-shelf metric wasn
 
 ## Step 5: Engineering a superior metric with LLM-as-a-Judge
 
-The failure analysis above showed that a simplistic, rule-based approach for "completeness" wasn't enough. I wanted to expermint with "LLM-as-a-judge" pattern as this hopefully could result in better sensitivity to my chosen aspects.
+The failure analysis above showed that a simplistic, rule-based approach for "completeness" wasn't enough. I wanted to experiment with "LLM-as-a-judge" pattern as this hopefully could result in better sensitivity to my chosen aspects.
 
 Why should "LLM-as-a-judge" work, in theory? If the LLM is able to tell good outputs from bad ones, why can't it just generate a better output to start with? The key point is that for most tasks, evaluation is a one-way function: it's a lot easier to say what score an output should get than it would be to say what output would get some score. This makes a generate-and-evaluate loop fundamentally more powerful than a single step of generation.
 
@@ -274,7 +274,7 @@ For completeness, here are to coefficient values:
 * Baseline BERTScore (Spearman's ρ): 0.1431
 * LLM-as-a-judge Metric (Spearman's ρ): 0.2770
 
-While a ρ of 0.28 is modest in absolute terms, it represents a meaningful alignment with human judgment for this small sample. It was definitely a move in the right direction. Future experiments on larger sets are needed to confirm and robustly quantify this correlation, but the qualitative improvement is already sufficient to guide metric-driven optimization.Interestingly, metrics which in themselves are DSPy programs can also be optimized as a part of the entire peipeline, which is defnitely an interesting follow-up experiment.
+While a ρ of 0.28 is modest in absolute terms, it represents a meaningful alignment with human judgment for this small sample. It was definitely a move in the right direction. Future experiments on larger sets are needed to confirm and robustly quantify this correlation, but the qualitative improvement is already sufficient to guide metric-driven optimization.Interestingly, metrics which in themselves are DSPy programs can also be optimized as a part of the entire pipeline, which is defnitely an interesting follow-up experiment.
 
 ## Step 6: Optimizing the program with the improved metric and human feedback
 
@@ -323,15 +323,17 @@ The ultimate test was to evaluate the performance of the `baseline program` and 
 
 The human-aligned LLM judge metric revealed a substantial ~26% improvement in quality. This improvement was not captured by BERTScore at showing only a negligible +0.08 point improvement.
 
-It's clearly not only about the program optimization but also about understanding **your** notion of quality and developing aligned metrics becayse summarization evaluation is a function with three inputs: the original text, the summary, and _you_: what are you looking to find out from the text? Without operationalizing the task-specific notion of quality, it's next to impossible to observe and measure the progress, beyond discarding totally irrelevant outputs.
+It's clearly not only about the program optimization but also about understanding **your** notion of quality and developing aligned metrics because summarization evaluation is a function with three inputs: the original text, the summary, and _you_: what are you looking to find out from the text? Without operationalizing the task-specific notion of quality, it's next to impossible to observe and measure the progress, beyond discarding totally irrelevant outputs.
 
 ## Conclusion: The power of human-aligned evaluation
 
 
 1.  **Standard metrics are often insufficient** for complex, nuanced tasks, failing to capture what truly matters to human users.
-2.  **Granular human feedback is indispensable** for understanding model deficiencies and guiding metric development. A well designed UI for capturing this feedback is an indispensible tool for this.
+2.  **Granular human feedback is indispensable** for understanding model deficiencies and guiding metric development. A well-designed UI for capturing this feedback is a critical tool.
 3.  **LLM-as-a-Judge metrics, carefully engineered with human insight, can become powerful, human-aligned evaluators.** They can potentially understand the subtle interplay of quality attributes far better than simple rule-based or statistical metrics.
 
-# References
+Although this experiment focused on clinical report summarization, the workflow generalizes to any domain where "quality depends on context", for example in educational content generation, where explanations must balance accuracy and pedagogy or creative writing, marketing copy, and translation tasks, where style, tone, and cultural context define “good” output. In all cases the same principles apply: collect task-relevant human feedback, engineer human-aligned metrics, and optimize LLM programs accordingly. This systematic approach bridges the gap between automated evaluation and real-world utility, ensuring outputs are genuinely aligned with human priorities.
+
+## References
 1. Citarella, Alessia Auriemma, et al. "Assessing the effectiveness of ROUGE as unbiased metric in Extractive vs. Abstractive summarization techniques." Journal of Computational Science 87 (2025): 102571.
 2. Alexander R. Fabbri, Wojciech Kryściński, Bryan McCann, Caiming Xiong, Richard Socher, Dragomir Radev; SummEval: Re-evaluating Summarization Evaluation. Transactions of the Association for Computational Linguistics 2021; 9 391–409. doi: https://doi.org/10.1162/
