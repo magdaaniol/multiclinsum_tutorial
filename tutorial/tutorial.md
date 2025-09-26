@@ -260,8 +260,13 @@ def make_holistic_llm_metric():
 ```
 </details>
 
+
 I then re-ran the correlation analysis, comparing this new "LLM-as-a-judge" metric against the baseline BERTScore:
 ![Description](images/bert_vs_llm.png)
+
+**Important caveat**: the development set consisted of only 30 examples, so these correlations should be interpreted cautiously. Small sample sizes make correlation estimates unstable, and minor changes in the data could shift the values noticeably.
+
+That said, the qualitative trend is clear:
 
 The right plot shows a visibly stronger trend. Importantly, the LLM-as-a-judge metric correctly identifies the worst summaries — those with human scores of 0.0 — by assigning them very low metric scores (e.g., 0.4), a task the baseline metric completely failed to do.
 
@@ -269,7 +274,7 @@ For completeness, here are to coefficient values:
 * Baseline BERTScore (Spearman's ρ): 0.1431
 * LLM-as-a-judge Metric (Spearman's ρ): 0.2770
 
-While a ρ of 0.28 is not exceptionally high in absolute terms, it represents a significant improvement. The new metric is 93% more correlated with human judgement than the baseline. This means that it was definitely a move in the right direction. Interestingly, metrics which in themselves are DSPy programs can also be optimized as a part of the entire peipeline, which is defnitely an interesting follow-up experiment.
+While a ρ of 0.28 is modest in absolute terms, it represents a meaningful alignment with human judgment for this small sample. It was definitely a move in the right direction. Future experiments on larger sets are needed to confirm and robustly quantify this correlation, but the qualitative improvement is already sufficient to guide metric-driven optimization.Interestingly, metrics which in themselves are DSPy programs can also be optimized as a part of the entire peipeline, which is defnitely an interesting follow-up experiment.
 
 ## Step 6: Optimizing the program with the improved metric and human feedback
 
@@ -308,7 +313,7 @@ This actually is what makes the workflow so powerful. The nuanced, qualitative j
 
 ## Final Evaluation: Did it all work?
 
-The ultimate test was to evaluate the performance of the `baseline program` and the `optimized program` on a held-out test set of 100 examples. I evaluated both programs using both metrics: the problematic BERTScore and the LLM-as-a-judge metric.
+The ultimate test was to evaluate the performance of the `baseline program` and the `optimized program` on a held-out test set of 100 examples providing a more robust measurement of improvement. I evaluated both programs using both metrics: the problematic BERTScore and the LLM-as-a-judge metric.
 
 | Program Version             | Measured by Baseline Metric (BERTScore) | Measured by **Our LLM Judge Metric** |
 | :-------------------------- | :-------------------------------------- | :----------------------------------- |
