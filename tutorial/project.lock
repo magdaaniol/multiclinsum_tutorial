@@ -1,0 +1,112 @@
+install:
+  cmd: python -m weasel run install
+  script:
+    - python -m pip install -r requirements.txt
+  deps: []
+  outs: []
+download:
+  cmd: python -m weasel run download
+  script:
+    - bash -c 'curl -L https://zenodo.org/records/15517617/files/multiclinsum_gs_train_en.zip?download=1
+      -o data/multiclinsum_gs_train_en.zip && unzip -q data/multiclinsum_gs_train_en.zip
+      -d data/ && rm data/multiclinsum_gs_train_en.zip'
+  deps: []
+  outs:
+    - path: data/multiclinsum_gs_train_en
+      md5: 812d69948d124a2f7ca3cc32030f54d8
+preprocess:
+  cmd: python -m weasel run preprocess
+  script:
+    - python scripts/prepare_data.py --input-path data/multiclinsum_gs_train_en --dev-path
+      assets/clinical_notes_dev.jsonl --test-path assets/clinical_notes_test.jsonl
+      --n-dev 30 --n-test 100
+  deps:
+    - path: scripts/prepare_data.py
+      md5: 506eba98f62ffdcff6ea95a7d7896b6d
+    - path: data/multiclinsum_gs_train_en
+      md5: 812d69948d124a2f7ca3cc32030f54d8
+  outs:
+    - path: assets/clinical_notes_dev.jsonl
+      md5: 3e4ae0e48772641290a00dfa2c9504ba
+    - path: assets/clinical_notes_test.jsonl
+      md5: 856cb77bec57b3b5cf7e3381e5d1d8eb
+llm_feedback:
+  cmd: python -m weasel run llm_feedback
+  script:
+    - python -m prodigy dspy.llm_feedback summaries_llm_feedback summaries_feedback
+      ./feedback.cfg -F ./components.py
+  deps:
+    - path: components.py
+      md5: ae09bb0bc0605a038153cb702edb956f
+    - path: feedback.cfg
+      md5: 9b438ed9452c7bd811245823e46d7717
+  outs: []
+evaluate:
+  cmd: python -m weasel run evaluate
+  script:
+    - python -m prodigy dspy.evaluate summaries_raw_feedback dataset:summaries_gold
+      ./evaluate.cfg -F ./components.py
+  deps:
+    - path: components.py
+      md5: 608d3c48e2817c485c3848c54d658bb7
+    - path: evaluate.cfg
+      md5: d16863d17528a549fb063b3b102036a0
+  outs: []
+optimize:
+  cmd: python -m weasel run optimize
+  script:
+    - python -m prodigy dspy.optimize summaries_feedback ./optimize.cfg outputs/optimized_summarizer_v1.json
+      -F ./components.py
+  deps:
+    - path: components.py
+      md5: 2aecf98d79e892e7a0e16e1a133dbd55
+    - path: optimize.cfg
+      md5: 7dfa122d7f7e633a6d9f6cec978cb92b
+  outs:
+    - path: outputs/optimized_summarizer_v1.json
+      md5: 05c182778a8f6090a70ff0b176d03812
+echo-path:
+  cmd: python -m weasel run echo-path
+  script:
+    - 'echo '
+  deps: []
+  outs: []
+annotate:
+  cmd: python -m weasel run annotate
+  script:
+    - python -m prodigy dspy.annotate summaries_gold_test assets/clinical_notes_dev.jsonl
+      ./annotate.cfg -F ./components.py
+  deps:
+    - path: assets/clinical_notes_dev.jsonl
+      md5: b8c21ce33d31acc9893bedc0edb47d91
+    - path: components.py
+      md5: eac738bdc4b26a002b62202b5e53a09c
+    - path: annotate.cfg
+      md5: 32575d5b852b6b291db8d36c1b32dea6
+  outs: []
+process_feedback:
+  cmd: python -m weasel run process_feedback
+  script:
+    - python -m prodigy dspy.feedback summaries_feedback summaries_raw_feedback ./feedback.cfg
+      -F ./components.py
+  deps:
+    - path: components.py
+      md5: 49594da014d9bb5baa7afa60f155d8e8
+    - path: feedback.cfg
+      md5: e6aefb4f8da1954507cdef70f9b2979f
+  outs: []
+evaluate_test:
+  cmd: python -m weasel run evaluate_test
+  script:
+    - python -m prodigy dspy.evaluate summaries_test assets/clinical_notes_test.jsonl
+      ./evaluate_test.cfg -L outputs/optimized_summarizer_v1.json -F ./components.py
+  deps:
+    - path: assets/clinical_notes_test.jsonl
+      md5: 856cb77bec57b3b5cf7e3381e5d1d8eb
+    - path: outputs/optimized_summarizer_v1.json
+      md5: 05c182778a8f6090a70ff0b176d03812
+    - path: components.py
+      md5: 4b6fef60a2189222474a1f6a50210a6f
+    - path: evaluate_test.cfg
+      md5: 210baf584c6a4e385868a2f273c96d35
+  outs: []

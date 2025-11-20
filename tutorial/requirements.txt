@@ -1,0 +1,7 @@
+--extra-index-url https://XXXX-XXXX-XXXX-XXXX@download.prodi.gy/index
+prodigy[company]>=1.18.3
+dspy>=3.0.4
+spacy>=3.7.0
+bert-score
+scispacy
+https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_core_sci_lg-0.5.4.tar.gz

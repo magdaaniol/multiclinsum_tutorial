@@ -1,0 +1,118 @@
+title: "Prodigy DSPy Plugin Tutorial: Clinical Summarization"
+description: |
+  An end-to-end tutorial demonstrating the Prodigy-DSPy workflow for clinical
+  report summarization. This project follows the blog post on human-aligned LLM
+  evaluation and guides you through:
+  1. Annotating data with a baseline DSPy program
+  2. Evaluating and collecting human feedback on metrics
+  3. Synthesizing insights from feedback
+  4. Optimizing the program with human-in-the-loop guidance
+
+
+vars:
+  gold_dataset: "summaries_gold"
+  raw_feedback_dataset: "summaries_raw_feedback"
+  feedback_dataset: "summaries_feedback"
+  test_dataset: "summaries_test"
+  dev_source: "assets/clinical_notes_dev.jsonl"
+  test_source: "assets/clinical_notes_test.jsonl"
+  config_dir: "."
+  output_model: "optimized_summarizer_v1.json"
+
+directories:
+  - "assets"
+  - "data"
+  - "outputs"
+
+commands:
+
+  - name: install
+    help: "Install all required dependencies"
+    script:
+      - "python -m pip install -r requirements.txt"
+
+  - name: download
+    help: "Download MultiClinSUM dataset from Zenodo and extract it"
+    script:
+      - "bash -c 'curl -L https://zenodo.org/records/15517617/files/multiclinsum_gs_train_en.zip?download=1 -o data/multiclinsum_gs_train_en.zip && unzip -q data/multiclinsum_gs_train_en.zip -d data/ && rm data/multiclinsum_gs_train_en.zip'"
+    outputs:
+      - "data/multiclinsum_gs_train_en"
+
+  - name: preprocess
+    help: "Preprocess downloaded data into Prodigy format"
+    script:
+      - "python scripts/prepare_data.py --input-path data/multiclinsum_gs_train_en --dev-path ${vars.dev_source} --test-path ${vars.test_source} --n-dev 30 --n-test 100"
+    deps:
+      - "scripts/prepare_data.py"
+      - "data/multiclinsum_gs_train_en"
+    outputs:
+      - "assets/clinical_notes_dev.jsonl"
+      - "assets/clinical_notes_test.jsonl"
+
+  - name: annotate
+    help: "Step 1: Annotate clinical notes with gold-standard summaries"
+    script:
+      - "python -m prodigy dspy.annotate ${vars.gold_dataset} ${vars.dev_source} ${vars.config_dir}/annotate.cfg -F ./components.py"
+    deps:
+      - "assets/clinical_notes_dev.jsonl"
+      - "components.py"
+      - "annotate.cfg"
+
+  - name: evaluate
+    help: "Step 2: Evaluate program and collect human feedback on metric quality"
+    script:
+      - "python -m prodigy dspy.evaluate ${vars.raw_feedback_dataset} dataset:${vars.gold_dataset} ${vars.config_dir}/evaluate.cfg --debug-metric -F ./components.py"
+    deps:
+      - "components.py"
+      - "evaluate.cfg"
+
+  - name: process_feedback
+    help: "Step 3: Synthesize insights from human feedback under `human_feedback` field"
+    script:
+      - "python -m prodigy dspy.feedback ${vars.feedback_dataset} ${vars.raw_feedback_dataset} ${vars.config_dir}/feedback.cfg -F ./components.py"
+    deps:
+      - "components.py"
+      - "feedback.cfg"
+
+  - name: optimize
+    help: "Step 4: Optimize program with human-aligned feedback"
+    script:
+      - "python -m prodigy dspy.optimize ${vars.feedback_dataset} ${vars.config_dir}/optimize.cfg outputs/${vars.output_model} -F ./components.py"
+    deps:
+      - "components.py"
+      - "optimize.cfg"
+    outputs:
+      - "outputs/${vars.output_model}"
+
+  - name: evaluate_test
+    help: "Step 5: Evaluate optimized program on held-out test set"
+    script:
+      - "python -m prodigy dspy.evaluate ${vars.test_dataset} ${vars.test_source} ${vars.config_dir}/evaluate_test.cfg -L outputs/${vars.output_model} -F ./components.py"
+    deps:
+      - "assets/clinical_notes_test.jsonl"
+      - "outputs/${vars.output_model}"
+      - "components.py"
+      - "evaluate_test.cfg"
+
+
+workflows:
+  setup:
+    - install
+    - download
+    - preprocess
+
+  full:
+    - install
+    - download
+    - preprocess
+    - annotate
+    - evaluate
+    - process_feedback
+    - optimize
+    - evaluate_test
+
+  iterate:
+    - evaluate
+    - process_feedback
+    - optimize
+    - evaluate_test
