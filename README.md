@@ -19,5 +19,5 @@ See the [tutorial README](tutorial/README.md) for detailed instructions on runni
 
 ## Requirements
 
-- Prodigy Company Plugins version 0.5.0 or later
+- [Prodigy](https://prodi.gy/) Company Plugins version 0.5.0 or later
 - See `tutorial/requirements.txt` for full dependencies

@@ -2,7 +2,7 @@
 
 # 🪐 Weasel Project: Prodigy DSPy Plugin Tutorial: Clinical Summarization
 
-> **Note:** This tutorial requires Prodigy Company Plugins version 0.5.0 or later.
+> **Note:** This tutorial requires [Prodigy](https://prodi.gy/) Company Plugins version 0.5.0 or later.
 
 An end-to-end tutorial demonstrating the Prodigy-DSPy workflow for clinical
 report summarization. This project follows the [blog post](https://explosion.ai/blog/human-aligned-llm-evaluation-dspy) on human-aligned LLM
@@ -11,6 +11,8 @@ evaluation and guides you through:
 2. Evaluating and collecting human feedback on metrics
 3. Synthesizing insights from feedback
 4. Optimizing the program with human-in-the-loop guidance
+
+Note that the project contains a config file per Prodigy recipe. This is not necessary and you can define your components in a single config file and reuse it with different recipes. The split here is just to make the example as clear as possible.
 
 
 ## 📋 project.yml
