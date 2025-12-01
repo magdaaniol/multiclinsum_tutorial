@@ -45,11 +45,11 @@ def load_multiclinsum_examples(
         )
         return []
 
-
-    fulltext_files = sorted([f for f in os.listdir(fulltext_path) if f.endswith(".txt")])
+    fulltext_files = sorted(
+        [f for f in os.listdir(fulltext_path) if f.endswith(".txt")]
+    )
     msg.info(f"Found {len(fulltext_files)} examples in dataset")
 
-  
     if len(fulltext_files) > sample_size:
         fulltext_files = fulltext_files[:sample_size]
         msg.info(f"Using first {sample_size} examples")
@@ -79,7 +79,7 @@ def load_multiclinsum_examples(
                 "text": document_text,
                 "gold_summary": gold_summary,
                 "meta": {
-                    "source": "MultiClinSUM",   
+                    "source": "MultiClinSUM",
                     "filename": text_filename,
                 },
             }
@@ -108,9 +108,7 @@ def print_dataset_stats(examples: List[Dict[str, Any]], description: str) -> Non
         return
 
     text_lengths = [len(ex.get("text", "").split()) for ex in examples]
-    summary_lengths = [
-        len(ex.get("gold_summary", "").split()) for ex in examples
-    ]
+    summary_lengths = [len(ex.get("gold_summary", "").split()) for ex in examples]
 
     avg_text_len = sum(text_lengths) / len(text_lengths) if text_lengths else 0
     avg_summary_len = (
@@ -142,7 +140,7 @@ def hash_split(
 
     # Split
     dev = [ex for _, ex in scored[:n_dev]]
-    test = [ex for _, ex in scored[n_dev:n_dev + n_test]]
+    test = [ex for _, ex in scored[n_dev : n_dev + n_test]]
 
     return dev, test
 
