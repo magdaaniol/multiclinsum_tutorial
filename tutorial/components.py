@@ -146,7 +146,12 @@ def make_baseline_bertscore_metric():
     """
     Baseline metric using BERTScore.
     """
-
+    try:
+        from bert_score import score
+    except ImportError:
+        msg.fail(
+                "BERTScore not installed. Install with: pip install bert-score", exits=1
+            )
     def baseline_bertscore(
         gold: dspy.Example, pred: dspy.Prediction, trace=None
     ) -> float:
@@ -161,12 +166,6 @@ def make_baseline_bertscore_metric():
         Returns:
             BERTScore F1 value (0.0-1.0)
         """
-        try:
-            from bert_score import score
-        except ImportError:
-            msg.fail(
-                "BERTScore not installed. Install with: pip install bert-score", exits=1
-            )
         gold_summary = getattr(gold, "summary", "")
         pred_summary = getattr(pred, "summary", "")
 
